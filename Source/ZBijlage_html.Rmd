@@ -1,0 +1,413 @@
+# Bijlagen
+
+We geven per soortengroep een gedetailleerd overzicht van de uitgevoerde taken in 2018. Daarbij maken we onderscheid tussen:
+
+* TakenCP: taken uitgevoerd conform protocol
+* TakenNVCP: taken uitgevoerd niet volledig conform protocol
+* TakenGVM: taak niet uitgevoerd want geen veldwerk mogelijk
+* GeenInvoer: geen gegevens ingevoerd voor taak in meetnetten.be
+
+## Overzicht taken amfibieënmeetnetten {#h:bijlageamfibie}
+
+### Kikkers en padden
+
+#### Boomkikker en knoflookpad
+
+```{r TellingenTaakAmfibie, message= FALSE, warning= FALSE, results= 'asis', eval=TRUE}
+
+teljaar <- 2018
+
+taken_teljaar <- overzicht_taken_alle_long %>%
+  filter(jaar == teljaar) %>%
+  filter(soortgroep == "amfibieën") %>%
+  mutate(taak_kort = ifelse(substring(taak,1,10) == "Schepronde", paste("Schepronde",substring(taak,12,12)), 
+                            ifelse(substring(taak,1,9) == "Fuikronde", paste("Fuikronde",substring(taak,11,11)),taak))) %>%
+  mutate(taak_kort = ifelse(taak == "Extra telling",
+                            ifelse(protocol == "Padden en kikkers - Roepkoren",
+                                   "Extra telling - roepkoren",
+                                   ifelse(protocol == "Amfibieën - Fuiken",
+                                           "Extra telling - fuiken", 
+                                          ifelse(protocol == "Amfibieën - Larven en metamorfen", 
+                                                 "Extra telling - larven", "Extra telling"))),
+                            taak_kort)) %>%
+  mutate(taak_kort = ifelse(taak == "Extra telling" & protocol == "Rugstreeppad - Roepkoren of zichtwaarneming", "Extra telling - roepkoren of zichtwaarneming", taak_kort),
+         taak_kort = ifelse(taak == "Extra telling" & protocol == "Rugstreeppad - Zichtwaarneming", "Extra telling - zichtwaarneming", taak_kort))
+
+locaties_alle <- taken_teljaar %>%
+  filter(meetnet %in% c("Boomkikker", "Knoflookpad")) %>%
+    select(meetnet, locatie) %>%
+    unique()
+  
+  taken_teljaar_wide <- taken_teljaar %>%
+    filter(aantalTellingen > 0) %>%
+  filter(meetnet %in% c("Boomkikker", "Knoflookpad")) %>%
+    select(-taak, -werkpakket, -protocol, -soortgroep, -jaar, -tellingIngevoerd) %>%
+    spread(key = taak_kort, value = aantalTellingen, fill = 0) %>%
+    right_join(locaties_alle, by =c( "meetnet", "locatie")) %>%
+    mutate(bezoek_status =ifelse(is.na(bezoek_status), "Geen invoer", bezoek_status)) %>%
+    arrange(meetnet, locatie) %>%
+    left_join(steekproeflocaties, by = c("meetnet", "locatie")) %>%
+    mutate("Type locatie" = ifelse((meetnet %in% c("Kamsalamander", "Boomkikker")) & is.na(Steekproeflocatie), "Extra locatie", "Meetnetlocatie")) %>% #voor Boomkikker en Kamsalamander onderscheiden we de locaties die niet tot de steekproef behoren, voor alle andere meetnetten beschouwen we alle locaties als steekproefloctaies
+    select(meetnet, locatie, `Type locatie`, `bezoek_status`, starts_with("Roep"), starts_with("Sche"), everything(), -Steekproeflocatie)
+  
+  taken_teljaar_wide[is.na(taken_teljaar_wide)] <- 0
+  
+  taken_teljaar_wide %>%
+    rename(Meetnet = meetnet, Locatie = locatie, "Bezoek status" = bezoek_status) %>%
+    DT::datatable(rowname = FALSE, filter = 'top') %>%
+    DT::formatStyle(columns = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10), fontSize = '75%')
+
+
+
+```
+
+#### Rugstreeppad
+
+```{r TellingenTaakAmfibie2, message= FALSE, warning= FALSE, results= 'asis', eval=TRUE}
+
+locaties_alle <- taken_teljaar %>%
+  filter(meetnet %in% c("Rugstreeppad")) %>%
+    select(meetnet, locatie) %>%
+    unique()
+
+  taken_teljaar_wide <- taken_teljaar %>%
+    filter(aantalTellingen > 0) %>%
+  filter(meetnet == "Rugstreeppad") %>%
+    select(-taak, -werkpakket, -protocol, -soortgroep, -jaar, -tellingIngevoerd) %>%
+    spread(key = taak_kort, value = aantalTellingen, fill = 0) %>%
+    right_join(locaties_alle, by =c( "meetnet", "locatie")) %>%
+    mutate(bezoek_status =ifelse(is.na(bezoek_status), "Geen invoer", bezoek_status)) %>%
+    arrange(meetnet, locatie) 
+  
+  taken_teljaar_wide[is.na(taken_teljaar_wide)] <- 0
+  
+  taken_teljaar_wide %>%
+    rename(Meetnet = meetnet, Locatie = locatie, "Bezoek status" = bezoek_status) %>%
+    DT::datatable(rowname = FALSE, filter = 'top') %>%
+    DT::formatStyle(columns = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10), fontSize = '75%')
+
+```
+
+### Salamanders
+
+#### Kamsalamander
+
+```{r TellingenTaakAmfibie3, message= FALSE, warning= FALSE, results= 'asis', eval=TRUE}
+
+locaties_alle <- taken_teljaar %>%
+  filter(meetnet %in% c("Kamsalamander")) %>%
+    select(meetnet, locatie) %>%
+    unique()
+
+  taken_teljaar_wide <- taken_teljaar %>%
+    filter(aantalTellingen > 0) %>%
+  filter(meetnet == "Kamsalamander") %>%
+    select(-taak, -werkpakket, -protocol, -soortgroep, -jaar, -tellingIngevoerd) %>%
+    spread(key = taak_kort, value = aantalTellingen, fill = 0) %>%
+    right_join(locaties_alle, by =c( "meetnet", "locatie")) %>%
+    mutate(bezoek_status =ifelse(is.na(bezoek_status), "Geen invoer", bezoek_status)) %>%
+    arrange(meetnet, locatie) %>%
+    left_join(steekproeflocaties, by = c("meetnet", "locatie")) %>%
+    mutate("Type locatie" = ifelse((meetnet %in% c("Kamsalamander", "Boomkikker")) & is.na(Steekproeflocatie), "Extra locatie", "Meetnetlocatie")) %>% #voor Boomkikker en Kamsalamander onderscheiden we de locaties die niet tot de steekproef behoren, voor alle andere meetnetten beschouwen we alle locaties als steekproefloctaies
+    select(meetnet, locatie, `Type locatie`, `bezoek_status`, starts_with("Fui"), starts_with("Sche"), everything(), -Steekproeflocatie)
+  
+  taken_teljaar_wide[is.na(taken_teljaar_wide)] <- 0
+  
+  taken_teljaar_wide %>%
+    rename(Meetnet = meetnet, Locatie = locatie, "Bezoek status" = bezoek_status) %>%
+    DT::datatable(rowname = FALSE, filter = 'top') %>%
+    DT::formatStyle(columns = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10), fontSize = '75%')
+
+```
+
+#### Vuursalamander
+
+```{r TellingenTaakAmfibie4, message= FALSE, warning= FALSE, results= 'asis', eval=TRUE}
+
+locaties_alle <- taken_teljaar %>%
+  filter(meetnet %in% c("Vuursalamander")) %>%
+    select(meetnet, locatie) %>%
+    unique()
+
+  taken_teljaar_wide <- taken_teljaar %>%
+    filter(aantalTellingen > 0) %>%
+  filter(meetnet == "Vuursalamander") %>%
+    select(-taak, -werkpakket, -protocol, -soortgroep, -jaar, -tellingIngevoerd) %>%
+    spread(key = taak_kort, value = aantalTellingen, fill = 0) %>%
+    right_join(locaties_alle, by =c( "meetnet", "locatie")) %>%
+    mutate(bezoek_status =ifelse(is.na(bezoek_status), "Geen invoer", bezoek_status)) %>%
+    arrange(meetnet, locatie) 
+  
+  taken_teljaar_wide[is.na(taken_teljaar_wide)] <- 0
+  
+  taken_teljaar_wide %>%
+    rename(Meetnet = meetnet, Locatie = locatie, "Bezoek status" = bezoek_status) %>%
+    DT::datatable(rowname = FALSE, filter = 'top') %>%
+    DT::formatStyle(columns = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10), fontSize = '75%')
+
+```
+
+
+## Overzicht taken vlindermeetnetten {#h:bijlagevlinders}
+
+### Transecttellingen en gebiedstellingen
+
+```{r TellingenTaakVlinders, message= FALSE, warning= FALSE, results= 'asis', eval=TRUE}
+
+teljaar <- 2018
+
+taken_teljaar <- overzicht_taken_alle_long %>%
+  filter(jaar == teljaar) %>%
+  filter(soortgroep == "dagvlinders") %>%
+  filter(meetnet != "Gentiaanblauwtje") %>%
+  mutate(taak_kort = ifelse(substring(taak, 1, 15) == "Transecttelling", paste("Telling", substring(taak, 17, 17)), taak),
+         taak_kort = ifelse(substring(taak_kort, 1, 14) == "Gebiedstelling", paste("Telling", substring(taak_kort, 16, 16)), taak_kort)) 
+
+locaties_alle <- taken_teljaar %>%
+    select(meetnet, locatie) %>%
+    unique()
+  
+  taken_teljaar_wide <- taken_teljaar %>%
+    filter(aantalTellingen > 0) %>%
+    select(-taak, -werkpakket, -protocol, -soortgroep, -jaar, -tellingIngevoerd) %>%
+    spread(key = taak_kort, value = aantalTellingen, fill = 0) %>%
+    right_join(locaties_alle, by =c( "meetnet", "locatie")) %>%
+    mutate(bezoek_status =ifelse(is.na(bezoek_status), "Geen invoer", bezoek_status)) %>%
+    arrange(meetnet, locatie)
+  
+  taken_teljaar_wide[is.na(taken_teljaar_wide)] <- 0
+  
+  taken_teljaar_wide %>%
+    mutate(`Telling 4` = ifelse(meetnet %in% c("Argusvlinder", "Klaverblauwtje", "Bruin dikkopje"), `Telling 4`, NA),
+           `Telling 5` = ifelse(meetnet %in% c("Argusvlinder", "Klaverblauwtje", "Bruin dikkopje"), `Telling 5`, NA),
+           `Telling 6` = ifelse(meetnet %in% c("Argusvlinder", "Klaverblauwtje", "Bruin dikkopje"), `Telling 6`, NA)) %>%
+    rename(Locatie = locatie, "Bezoek status" = bezoek_status) %>%
+    DT::datatable(rowname = FALSE, filter = 'top') %>%
+    DT::formatStyle(columns = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10), fontSize = '75%')
+  
+
+```
+
+### Eitellingen
+
+```{r TellingenTaakVlindersGB, message= FALSE, warning= FALSE, results= 'asis', eval=TRUE}
+# #Gentiaanblauwtje andere strucuur
+overzicht_taken_alle_long %>% 
+  filter(jaar == teljaar) %>%
+  filter(meetnet == "Gentiaanblauwtje") %>%
+  select(-soortgroep, -jaar, -werkpakket, -protocol, -tellingIngevoerd) %>%
+   # kable(caption = "Gentiaanblauwtje", format = "html") %>%
+   #  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"), font_size = 11) %>%
+   #  row_spec(0,  bold = TRUE)
+  DT::datatable(rownames = FALSE) %>%
+  DT::formatStyle(columns = c(1, 2, 3, 4, 5), fontSize = '75%')
+# 
+
+```
+
+
+## Overzicht taken libellenmeetnetten {#h:bijlagelibellen}
+
+### Transecttellingen en gebiedstellingen
+
+```{r TellingenTaaklibel, message= FALSE, warning= FALSE, results= 'asis', eval = TRUE}
+
+teljaar <- 2018
+
+taken_teljaar <- overzicht_taken_alle_long %>%
+  filter(jaar == teljaar) %>%
+  filter(soortgroep == "libellen") %>%
+  filter(protocol %in% c("Libellen - Transecten", "Libellen - Populatietelling per locatie")) %>%
+  mutate(taak_kort = ifelse(substring(taak,1,15) == "Transecttelling",paste("Telling",substring(taak,17,17)), taak)) %>%
+  mutate(taak_kort = ifelse(substring(taak,1,14) == "Gebiedstelling",paste("Telling",substring(taak,16,16)), taak_kort)) %>%
+  mutate(taak_kort = ifelse(substring(taak,1,4) == "Larv",paste("Telling",substring(taak,31,31)), taak_kort))
+
+locaties_alle <- taken_teljaar %>%
+    select(meetnet, locatie) %>%
+    unique()
+  
+  taken_teljaar_wide <- taken_teljaar %>%
+    filter(aantalTellingen > 0) %>%
+    select(-taak, -werkpakket, -protocol, -soortgroep, -jaar, -tellingIngevoerd) %>%
+    spread(key = taak_kort, value = aantalTellingen, fill = 0) %>%
+    right_join(locaties_alle, by =c( "meetnet", "locatie")) %>%
+    mutate(bezoek_status =ifelse(is.na(bezoek_status), "Geen invoer", bezoek_status)) %>%
+    arrange(meetnet, locatie)
+  
+  taken_teljaar_wide[is.na(taken_teljaar_wide)] <- 0
+  
+  taken_teljaar_wide %>%
+    mutate(`Telling 3` = ifelse(meetnet == "Bosbeekjuffer", `Telling 3`, NA)) %>%
+    rename(Locatie = locatie, "Bezoek status" = bezoek_status) %>%
+    DT::datatable(rowname = FALSE, filter = 'top') %>%
+    DT::formatStyle(columns = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10), fontSize = '75%')
+
+```
+
+### Tellingen larvenhuidjes
+
+```{r TellingenTaaklibelLarve, message= FALSE, warning= FALSE, results= 'asis', eval = TRUE}
+
+teljaar <- 2018
+
+taken_teljaar <- overzicht_taken_alle_long %>%
+  filter(jaar == teljaar) %>%
+  filter(soortgroep == "libellen") %>%
+  filter(protocol == "Libellen - Larvenhuidjes") %>%
+  mutate(taak_kort = ifelse(substring(taak,1,15) == "Transecttelling",paste("Telling",substring(taak,17,17)), taak)) %>%
+  mutate(taak_kort = ifelse(substring(taak,1,14) == "Gebiedstelling",paste("Telling",substring(taak,16,16)), taak_kort)) %>%
+  mutate(taak_kort = ifelse(substring(taak,1,4) == "Larv",paste("Telling",substring(taak,31,31)), taak_kort))
+
+locaties_alle <- taken_teljaar %>%
+    select(meetnet, locatie) %>%
+    unique()
+  
+  taken_teljaar_wide <- taken_teljaar %>%
+    filter(aantalTellingen > 0) %>%
+    select(-taak, -werkpakket, -protocol, -soortgroep, -jaar, -tellingIngevoerd) %>%
+    spread(key = taak_kort, value = aantalTellingen, fill = 0) %>%
+    right_join(locaties_alle, by =c( "meetnet", "locatie")) %>%
+    mutate(bezoek_status =ifelse(is.na(bezoek_status), "Geen invoer", bezoek_status)) %>%
+    arrange(meetnet, locatie)
+  
+  taken_teljaar_wide[is.na(taken_teljaar_wide)] <- 0
+  
+  taken_teljaar_wide %>%
+    mutate(`Telling 4` = ifelse(meetnet == "Rivierrombout", `Telling 4`, NA),
+           `Telling 5` = ifelse(meetnet == "Rivierrombout", `Telling 5`, NA),
+           `Telling 6` = ifelse(meetnet == "Rivierrombout", `Telling 6`, NA)) %>%
+    rename(Locatie = locatie, "Bezoek status" = bezoek_status) %>%
+    DT::datatable(rowname = FALSE, filter = 'top') %>%
+    DT::formatStyle(columns = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10), fontSize = '75%')
+
+```
+
+
+## Overzicht taken zoogdieren {#h:bijlagezoogdieren}
+
+
+```{r TellingenTaakZoogdieren, message= FALSE, warning= FALSE, results= 'asis', eval = FALSE}
+
+overzicht_taken_alle_long_2017 <- overzicht_taken_alle_long %>%
+  filter(jaar == "2017") %>%
+  filter(soortgroep == "zoogdieren") %>%
+  ungroup() %>%
+  mutate(taak_kort = ifelse(substring(taak,1,15) == "Transecttelling",paste("Telling",substring(taak,17,17)), taak)) 
+
+zoogdieren<- overzicht_taken_alle_long %>%
+  filter((soortgroep == "zoogdieren") & (jaar == 2017)) %>%
+  select(meetnet) %>%
+  unique()
+
+ soort <- zoogdieren$meetnet[1]
+ 
+for( soort in  zoogdieren$meetnet){
+  
+  taken_zoogdieren <- overzicht_taken_alle_long_2017 %>%
+    filter(meetnet ==  soort) 
+  
+  locaties_zoogdieren_alle <- taken_zoogdieren %>%
+    select(meetnet, locatie) %>%
+    unique()
+  
+  taken_zoogdieren_wide <- taken_zoogdieren %>%
+    filter(aantalTellingen > 0) %>%
+    select(-taak, -werkpakket, -protocol) %>%
+    spread(key = taak_kort, value = aantalTellingen, fill = 0) %>%
+    right_join(locaties_zoogdieren_alle, by =c( "meetnet", "locatie"))
+  
+ taken_zoogdieren_wide$bezoek_status <- ifelse(is.na(taken_zoogdieren_wide$bezoek_status), "Geen invoer", taken_zoogdieren_wide$bezoek_status)
+  
+  taken_zoogdieren_wide[is.na(taken_zoogdieren_wide)] <- 0
+  
+  taken_zoogdieren_wide <- taken_zoogdieren_wide %>%
+    rename(Locatie = locatie, "Bezoek status" = bezoek_status)
+  
+  nRow <- nrow(taken_zoogdieren_wide)
+  
+    taken_zoogdieren_wide %>%
+    select(-soortgroep, - meetnet,  -jaar) %>%
+    kable(caption =  soort, format = "html") %>%
+    kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"), font_size = 11) %>%
+    row_spec(0,  bold = TRUE) %>%
+    print()
+
+}
+```
+
+## Overzicht taken overige soortengroepen {#h:bijlageoverige}
+
+
+```{r TellingenTaakOverige, message= FALSE, warning= FALSE, results= 'asis', eval = FALSE}
+
+overzicht_taken_alle_long_2017 <- overzicht_taken_alle_long %>%
+  filter(jaar == "2017") %>%
+  filter(soortgroep == "overige") %>%
+  ungroup() %>%
+  mutate(taak_kort = ifelse(substring(taak,1,15) == "Transecttelling",paste("Telling",substring(taak,17,17)), taak)) 
+
+ overige <- overzicht_taken_alle_long %>%
+  filter((soortgroep == "overige") & (jaar == 2017)) %>%
+  select(meetnet) %>%
+  unique()
+
+ soort <- overige$meetnet[1]
+ 
+for( soort in  overige$meetnet){
+  
+  taken_overige <- overzicht_taken_alle_long_2017 %>%
+    filter(meetnet ==  soort) 
+  
+  locaties_overige_alle <- taken_overige %>%
+    select(meetnet, locatie) %>%
+    unique()
+  
+  taken_overige_wide <- taken_overige %>%
+    filter(aantalTellingen > 0) %>%
+    select(-taak, -werkpakket, -protocol) %>%
+    spread(key = taak_kort, value = aantalTellingen, fill = 0) %>%
+    right_join(locaties_overige_alle, by =c( "meetnet", "locatie"))
+  
+ taken_overige_wide$bezoek_status <- ifelse(is.na(taken_overige_wide$bezoek_status), "Geen invoer", taken_overige_wide$bezoek_status)
+  
+  taken_overige_wide[is.na(taken_overige_wide)] <- 0
+  
+  taken_overige_wide <- taken_overige_wide %>%
+    rename(Locatie = locatie, "Bezoek status" = bezoek_status)
+  
+  nRow <- nrow(taken_overige_wide)
+  
+    taken_overige_wide %>%
+    select(-soortgroep, - meetnet,  -jaar) %>%
+    kable(caption =  soort, format = "html") %>%
+    kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"), font_size = 11) %>%
+    row_spec(0,  bold = TRUE) %>%
+    print()
+
+}
+
+
+
+```
+
+
+
+```{r tabeltakenNUNU, message= FALSE, warning= FALSE, eval = FALSE}
+## Overzicht niet uitvoerbare taken {#h:bijlageTNU}
+# 
+# Onderstaande tabel geeft een overzicht van de taken/tellingen die niet uitgevoerd konden worden en daarom meegerekend worden bij de evaluatie van de jaardoelen.
+
+takenNU %>% 
+  filter(jaar == "2017") %>% 
+  rename("Aantal niet uitvoerbare taken" = AantalTaken_NU, Reden = Reden_NU ) %>%
+  #select(-jaar) %>%
+  kable(booktabs = TRUE, escape = TRUE,
+         format = "html", 
+        align = c("l", "l", "l","c", "c","l")) %>%
+  kable_styling(latex_options =  c( "hold_position")) %>%
+    column_spec(4, width = "4cm") %>%
+    column_spec(5, width = "4cm")
+ 
+```
+
+
