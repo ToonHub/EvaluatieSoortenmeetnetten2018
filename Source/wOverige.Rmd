@@ -1,0 +1,172 @@
+# Overige soortengroepen
+
+## Meetnetkarakteristieken
+
+Tabel \@ref(tab:MeetnKaraktoverige1) en Tabel \@ref(tab:MeetnKaraktoverige2) geven een overzicht van de karakteristieken van de meetnetten voor spinkhanen, krekels, kevers en spinnen.
+
+```{r MeetnKaraktoverige1, message= FALSE, warning= FALSE, results= 'asis'}
+
+bezoeken_overige <- filter(bezoeken, soortgroep == "overige")
+overige <- unique(bezoeken_overige$meetnet)
+
+meetnetKarakt %>%
+  filter(Soortengroep %in% c("Kevers", "Spinnen", "Spinkhanen&krekels")) %>%
+  select(Meetnet, Protocol, Type, Meetnetlocaties, 'Meetcyclus (jaar)'= Meetcyclus, Start = Opstartjaar) %>%
+  unique() %>%
+  kable(caption = "Overzicht van de karakteristieken van de overigemeetnetten: veldprotocol, type meetnet (integraal of steekproef), aantal meetnetlocaties en de meetcyclus in jaren", 
+        row.names = FALSE, 
+        booktabs = TRUE,
+        format = "html",
+        align =c("l", "l","l","c","c","c")) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive")) %>%
+  column_spec(5, width = "2cm")
+  
+```
+
+
+```{r MeetnKaraktoverige2, message= FALSE, warning= FALSE, results= 'asis'}
+
+meetnetKarakt %>%
+  filter(Soortengroep %in% c("Kevers", "Spinnen", "Spinkhanen&krekels")) %>%
+  select(Meetnet,  'Bezoeken (/jaar)' = Bezoeken, 'Begin telperiode' = Begin_telperiode, 'Einde telperiode' = Einde_telperiode) %>%
+  unique() %>%
+  kable(caption = "Overzicht van de karakteristieken van de overigemeetnetten: aantal bezoeken per jaar, begin en einde van de telperiode", row.names = FALSE, booktabs = TRUE, format = "html", align =c("l","c","c","c")) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive")) %>%
+  # column_spec(1, width = "2cm") %>%
+  # column_spec(4, width = "2cm") %>%
+  # column_spec(5, width = "2cm") %>%
+ # column_spec(6, width = "2cm")%>%
+  collapse_rows(columns = 1)
+
+```
+
+## Overzicht van de uitgevoerde tellingen
+
+### Aantal tellingen en taken
+
+In bijlage \@ref(h:bijlageoverige) wordt per meetnetloctie een overzicht gegeven van de uitgevoerde taken.
+
+Tabel \@ref(tab:overzichtTellingenoverige) geeft een overzicht per meetnet. In de tabel onderscheiden we het aantal bezochte locaties (dit zijn locaties waar minstens eenmaal werd geteld) en het aantal voldoende getelde locaties (dit zijn de locaties waar het aantal tellingen werd gehaald binnen de afgesproken telperiode.  
+Tabel \@ref(tab:overzichtTellingenoverige) geeft ook de doelen die werden voorop gesteld voor 2016 en 2017.
+
+```{r overzichtTellingenoverige, message= FALSE, warning= FALSE, results= 'asis'}
+
+tabel_meetnetten2 %>%
+   filter(soortgroep %in% c("overige", "mollusken")) %>%
+  rename(weg = "Locaties voldoende geteld extra", weg2 = "Locaties voldoende geteld nieuw", weg3 = "Locaties voldoende geteld cyclus") %>%
+  select(-soortgroep, -weg, -weg2, -weg3) %>%
+  kable(booktabs = TRUE, 
+        caption = "Overzicht van de tellingen voor de overige meetnetten en de vooropgestelde doelen", 
+        format = "html", 
+        align =c("l","c","c","c","c","c","c","c")) %>%
+ kable_styling(bootstrap_options = c( "hover", "condensed", "responsive"),
+         font_size = 11) %>%
+    column_spec(2, width = "3cm")  %>%
+    column_spec(4, width = "3cm") 
+  # column_spec(6, width = "2cm") %>%
+  # column_spec(7, width = "2cm") %>%
+  #collapse_rows(columns = 4:5) 
+  
+```
+
+
+
+### Tijdstippen van de tellingen
+
+Figuur \@ref(fig:figuurBezoekenoverige) geeft een overzicht van de tijdstippen van de bezoeken.   
+
+```{r figuurBezoekenoverige, message= FALSE, warning= FALSE, fig.height= 7, fig.width= 6.5,  fig.cap = "Overzicht tijdstippen waarop tellingen werden uitgevoerd in 2017" }
+
+bezoeken %>% 
+  filter(soortgroep == "overige") %>% 
+  filter(jaar == "2017") %>% 
+  select(meetnet,locatie, datum,  bezoek_status) %>%
+  unique() %>%
+  ggplot(aes(x = datum, fill = bezoek_status)) + 
+  geom_histogram(binwidth = 7, colour = "white") + 
+  facet_wrap( ~ meetnet, scales = "free_x", nrow = 3) + 
+  labs(x = "Datum bezoek", y = "Aantal bezoeken")  + 
+  theme( axis.text.x = element_text(angle = 90, hjust = 1))
+
+```
+
+### Afwijkingen van het protocol
+
+De volgende tabel geeft een overzicht van de afwijkingen van het protocol.
+
+```{r afwijkingenProtocoloverige, message= FALSE, warning= FALSE}
+
+bezoeken %>% 
+  filter(soortgroep == "overige") %>% 
+  filter(jaar == "2017") %>% 
+  filter(bezoek_status != "TellingCP") %>% 
+  select(meetnet, datum, locatie, "bezoek status" = bezoek_status, notes) %>%
+  mutate(notes = gsub("\n", ". ",notes)) %>%
+  kable(booktabs = TRUE, escape = TRUE) %>%
+  kable_styling(latex_options =  c( "hold_position")) %>%
+    column_spec(5, width = "4cm")
+  
+```
+
+### Aantallen
+
+#### Overzicht totale aantallen per bezoek
+
+Onderstaande figuren tonen de verdeling van de getelde aantallen per bezoek.
+
+```{r figuurAantallenoverige2016, message=FALSE, warning= FALSE, fig.width= 5, fig.height= 3.5, fig.cap= paste("Verdeling van totaal getelde aantallen per bezoek",overige_2016, sep = " - ")}
+
+# aantal_libel <- aantallen %>%
+#   filter(soortgroep == "overige")
+
+overige_2016 <- c("Lentevuurspin", "Zadelsprinkhaan" )
+
+for (soort in overige_2016){
+  aantallen_figuur %>%
+    filter(meetnet == soort) %>%
+    figuur_aantallen_jaar(legend_position = "bottom") %>%
+    print()
+}
+
+```
+
+
+```{r figuurAantallenoverige2017, message=FALSE, warning= FALSE, fig.width= 6, fig.height= 3, fig.cap= "Verdeling van totaal getelde aantallen per bezoek - Vliegend hert"}
+
+overige_2017 <- c("Vliegend hert", "Gerande oeverspin")
+
+aantallen_figuur %>%
+  filter(meetnet %in% overige_2017) %>%
+  figuur_aantallen(legend_position = "bottom")
+
+```
+
+```{r verkenningAantallenoverige3, message=FALSE, warning= FALSE, fig.width= 5, fig.height= 5}
+
+aantallen_overige_bezoek <- aantallen %>%
+  filter(soortgroep == "overige") %>%
+   filter(bezoek_status == "Conform protocol") %>%
+  group_by(meetnet,protocol,locatie, jaar, visit_id) %>%
+  summarise(aantalBezoek = sum(aantal, na.rm =TRUE))
+
+aantallen_overige_locatie <-  aantallen_overige_bezoek %>%
+  group_by(meetnet,protocol,locatie, jaar) %>%
+  summarise(aantalBezoekGemiddeld = mean(aantalBezoek, na.rm =TRUE),           
+            nBezoeken = n_distinct(visit_id))
+
+                              
+```
+
+
+#### Gemiddeld aantal per locatie
+
+```{r verkenningTrendoverige, message=FALSE, warning= FALSE, fig.width= 7, fig.height= 3, fig.cap = "Gemiddeld aantal getelde individuen per locatie en per jaar"}
+
+aantallen_overige_locatie %>%
+  ggplot(aes(x= jaar, y = aantalBezoekGemiddeld, size = nBezoeken, group = locatie,)) + 
+  geom_point() +  
+geom_line(linetype = 2,  alpha =0.3, size = 0.4) +
+ facet_wrap(~ meetnet) +
+ labs(x = "Gemiddeld aantal getelde individuen per bezoek", y = "Jaar")
+
+```
