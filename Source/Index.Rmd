@@ -33,7 +33,7 @@ header-includes:
 #initialiseer markdown
 library(knitr)
 library(pander)
-opts_chunk$set(fig.width=4, fig.height = 4, fig.path = '')
+opts_chunk$set(fig.width=4, fig.height = 4)
 opts_chunk$set(echo = FALSE)
 panderOptions_default <- panderOptions()
 fw <- 9 #default fig height
