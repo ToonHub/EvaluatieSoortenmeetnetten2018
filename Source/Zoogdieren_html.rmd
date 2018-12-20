@@ -1,0 +1,237 @@
+# Zoogdieren
+
+## Meetnetkarakteristieken
+
+Tabel \@ref(tab:MeetnKaraktzoogdieren1) en Tabel \@ref(tab:MeetnKaraktzoogdieren2) geven een overzicht van de karakteristieken van de zoogdierenmeetnetten (De Bruyn et al.2015).
+
+```{r MeetnKaraktzoogdieren1, message= FALSE, warning= FALSE, results= 'asis'}
+
+bezoeken_zoogdieren <- filter(bezoeken, soortgroep == "zoogdieren")
+zoogdieren <- unique(bezoeken_zoogdieren$meetnet)
+
+meetnetKarakt %>%
+  filter(Soortengroep == "Zoogdieren") %>%
+  select(Meetnet, Protocol, Type, Meetnetlocaties, 'Meetcyclus (jaar)'= Meetcyclus, Start = Opstartjaar) %>%
+  unique() %>%
+  kable(caption = "Overzicht van de karakteristieken van de zoogdierenmeetnetten: veldprotocol, type meetnet (integraal of steekproef), aantal meetnetlocaties en de meetcyclus in jaren", 
+        row.names = FALSE, 
+        booktabs = TRUE,
+        format = "html") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive")) %>%
+  column_spec(5, width = "2cm")
+  
+```
+
+
+```{r MeetnKaraktzoogdieren2, message= FALSE, warning= FALSE, results= 'asis'}
+
+meetnetKarakt %>%
+  filter(Soortengroep == "Zoogdieren") %>%
+  select(Meetnet,  'Bezoeken (/jaar)' = Bezoeken, 'Begin telperiode' = Begin_telperiode, 'Einde telperiode' = Einde_telperiode) %>%
+  unique() %>%
+  kable(caption = "Overzicht van de karakteristieken van de zoogdierenmeetnetten: aantal bezoeken per jaar, begin en einde van de telperiode", row.names = FALSE, booktabs = TRUE, format = "html") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive")) %>%
+  # column_spec(1, width = "2cm") %>%
+  # column_spec(4, width = "2cm") %>%
+  # column_spec(5, width = "2cm") %>%
+ # column_spec(6, width = "2cm")%>%
+  collapse_rows(columns = 1)
+
+```
+
+## Overzicht van de uitgevoerde tellingen
+
+### Aantal tellingen en taken
+
+In bijlage \@ref(h:bijlagezoogdieren) wordt per meetnetloctie een overzicht gegeven van de uitgevoerde taken.
+
+Tabel \@ref(tab:overzichtTellingenzoogdieren) geeft een overzicht van de meetnetten waarvan de locaties jaarlijks worden geteld (de meetcyclus is dus 1 jaar). In de tabel onderscheiden we: 
+
+* de jaardoelen: het aantal te tellen locaties voor een bepaald jaar; 
+* het aantal tellingen conform protocol;
+* het aantal tellingen dat niet kon worden uitgevoerd door overmacht; en
+* het aantal voldoende getelde meetnetlocaties: dit zijn de locaties waar het aantal tellingen werd gehaald binnen de afgesproken telperiode, conform het protocol. Ook de tellingen die niet konden uitgevoerd worden door overmacht worden hiervoor meegrekend.
+
+```{r overzichtTellingenzoogdieren, message= FALSE, warning= FALSE, results= 'asis'}
+
+tabel_meetnetten2 %>%
+   filter(Soortgroep == "zoogdieren") %>%
+  filter(Meetcyclus == 1) %>%
+  mutate("Oppervlakte geteld (ha)" = c( 82.8, 73.4, NA, NA, NA)) %>%
+  select(Meetnet, Protocol, everything()) %>%
+  arrange(Meetnet, Protocol, Jaar)   %>%
+  select(-Soortgroep, -"Type locatie", -"Meetnetlocaties voldoende geteld - nieuw", -"Meetnetlocaties voldoende geteld - cyclus", -Meetcyclus, -"Doel meetcyclus") %>%
+  kable(booktabs = TRUE, 
+        caption = "Overzicht van de tellingen voor de overigemeetnetten met 1-jarige meetcyclus en de vooropgestelde doelen", 
+        format = "html",
+        align = c("l", "l", "c","c","c", "c", "c", "c", "c", "c", "c")) %>%
+ kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"),
+               font_size = 11) %>%
+  #   column_spec(4, width = "2cm") %>%
+  # column_spec(5, width = "2cm") %>%
+  # column_spec(6, width = "2cm") %>%
+  # column_spec(7, width = "2cm") %>%
+  collapse_rows(columns = c(1, 2)) 
+
+  
+```
+
+### Tijdstippen van de tellingen
+
+Figuur \@ref(fig:figuurBezoekenzoogdieren) geeft een overzicht van de tijdstippen van de bezoeken.   
+
+```{r figuurBezoekenzoogdieren, message= FALSE, warning= FALSE, fig.height= 4, fig.width= 6.5,  fig.cap = "Overzicht tijdstippen waarop tellingen werden uitgevoerd in 2018" }
+
+bezoeken %>% 
+  filter(soortgroep == "zoogdieren") %>% 
+  filter(jaar == "2018") %>% 
+  select(meetnet,locatie, datum,  bezoek_status) %>%
+  unique() %>%
+  ggplot(aes(x = datum, fill = bezoek_status)) + 
+  geom_histogram(binwidth = 7, colour = "white") + 
+  facet_wrap( ~ meetnet, scales = "free_x", nrow = 3) + 
+  labs(x = "Datum bezoek", y = "Aantal bezoeken")  + 
+  theme( axis.text.x = element_text(angle = 90, hjust = 1))
+
+```
+
+### Afwijkingen van het protocol
+
+Alle bezoeken van hazelmuis werden conform protocol uitgevoerd.
+
+```{r afwijkingenProtocolzoogdieren, message= FALSE, warning= FALSE}
+# 
+# bezoeken %>%
+#   filter(soortgroep == "zoogdieren") %>%
+#   filter(jaar == "2018") %>%
+#   filter(bezoek_status != "Conform protocol") %>%
+#   select(meetnet, datum, locatie, "bezoek status" = bezoek_status, notes) %>%
+#   mutate(notes = gsub("\n", ". ",notes)) %>%
+#   kable(booktabs = TRUE, escape = TRUE) %>%
+#   kable_styling(latex_options =  c( "hold_position")) %>%
+#     column_spec(5, width = "4cm")
+  
+```
+
+## Verkenning van de ingevoerde aantallen
+
+### Hazelmuis
+
+#### Overzicht totale aantallen per bezoek
+
+```{r figuurAantallenZoogdieren, warning= FALSE}
+ aantallen_figuur %>%
+    filter(soortgroep == "zoogdieren") %>%
+    figuur_aantallen_jaar(legend_position = "bottom")
+
+```
+
+
+
+```{r verkenningAantallenHazelmuis3Tttt, message=FALSE, warning= FALSE}
+
+covariabelen_hazelmuis_wide <- covariabelen %>%
+  filter(meetnet == "Hazelmuis") %>%
+  mutate(waarde = as.numeric(waarde)) %>%
+  select(visit_id, bezoekvariabele, waarde) %>%
+  spread(key = bezoekvariabele, value = waarde)
+
+aantallen_hazelmuis <- filter(aantallen,  meetnet == "Hazelmuis" )
+
+aantallen_hazelmuis_wide <- aantallen_hazelmuis %>%
+  filter(taak != "Extra telling") %>%
+  spread(key = activiteit ,value = aantal ) %>%
+  mutate(aantal_netto = nest - `nest (hervondst)`,
+            aantal_totaal = nest,
+            aantal_hervondst = `nest (hervondst)`) %>%
+  left_join( covariabelen_hazelmuis_wide, by = "visit_id")
+
+```
+
+#### Evolutie getelde aantallen binnen telperiode
+
+\@ref(fig:figuurAantallenHazelmuis1) en \@ref(fig:figuurAantallenHazelmuis2) geven de evolutie van de getelde aantallen binnen het seizoen. In \@ref(fig:figuurAantallenHazelmuis1) worden tellingen van eenzelfde locatie verbonden met een stippellijn. De blauwe lijn in \@ref(fig:figuurAantallenHazelmuis2) toont de gemiddelde evolutie binnen het seizoen, waarbij de grijze banden aan beide kanten van de blauwe lijn de onzekerheid aangeven op deze gemiddelde evolutie.
+
+```{r figuurAantallenHazelmuis1, message=FALSE, warning= FALSE,fig.width= 8, fig.height= 4, fig.cap ="Aantal getelde hazelmuisnesten per bezoek; tellingen op eenzelfde locatie worden verbonden met een stippellijn; voor een tweede of derde bezoek wordt het aantal nieuwe gevonden nesten weergegeven"  }
+
+aantallen_hazelmuis_wide %>%
+  ggplot(aes(x= datum,
+             y = aantal_netto,
+             group = locatie,
+             colour = locatie)) +
+  geom_point(alpha = 0.6) +  
+  geom_line(linetype = 2,  alpha = 0.6, size = 0.4, colour = inbo.grijsblauw)  + 
+  facet_grid(meetnet ~ jaar, scales = "free_x") +
+  theme(legend.position = 'none', axis.text.x = element_text(angle = 90)) +
+  labs (x = "Datum bezoek",y= "Aantal (nieuw) getelde nesten")
+
+```
+
+```{r figuurAantallenHazelmuis2, message=FALSE, warning= FALSE, fig.width= 7, fig.height= 3.5, fig.cap ="Aantal getelde hazelmuisnesten per bezoek en de globale evolutie in getelde aantallen binnen het telseizoen (blauwe lijn)"  }
+
+aantallen_hazelmuis_wide %>%
+  ggplot(aes(x= datum,
+             y = aantal_netto)) +
+  geom_point(alpha = 0.6) + 
+  geom_smooth(method = "gam", method.args = list(family = poisson),formula = y ~ s(x, bs = "cs", k = 6) , size = 0.4, colour = "blue") +
+  facet_grid(meetnet ~ jaar, scales = "free_x") +
+  theme(legend.position = 'none', axis.text.x = element_text(angle = 90))
+  labs (x = "Datum bezoek",y= "Aantal (nieuw) getelde nesten")
+
+```
+
+Het aatal tellers kan een impact hebben op de detectiekans van de nesten. \@ref(fig:figuurAantallenHazelmuis3) geeft de relatie tussen het aantal tellers en het aantal getelde nesten. 
+
+```{r figuurAantallenHazelmuis3, message=FALSE, fig.width= 7, fig.height= 3.5, warning= FALSE, fig.cap = "Relatie tussen aantal getelde hazelmuisnesten en aantal tellers"  }
+
+aantallen_hazelmuis_wide %>%
+  ggplot(aes(x= `Aantal tellers`,
+             y = aantal_netto)) +
+   #          colour = jaar  )) +
+  geom_point(alpha = 0.5) +
+  geom_smooth(method = "gam",
+              method.args = list(family = poisson),
+              formula = y ~ s(x, bs = "cs", k = 6) ,
+              size = 0.4, colour = "blue") +
+  facet_wrap(~ jaar) +
+  labs (y= "Aantal getelde nesten")
+```
+
+
+#### Evolutie gemiddelde aantallen per locatie en per jaar
+
+```{r verkenningAantallenzoogdieren3, message=FALSE, warning= FALSE, fig.width= 5, fig.height= 5}
+
+aantallen_zoogdieren_locatie_cp <-  aantallen_hazelmuis_wide %>%
+  group_by(meetnet,protocol,locatie, jaar) %>%
+  summarise(aantalBezoekGemiddeld = mean(aantal_netto, na.rm =TRUE),           
+            nBezoeken = n_distinct(visit_id)) %>%
+  ungroup()
+
+```
+
+
+```{r verkenningTrendzoogdieren, message=FALSE, warning= FALSE, fig.width= 4, fig.height= 4, fig.cap = "Gemiddeld aantal getelde nesten per locatie en per jaar"}
+
+aantallen_zoogdieren_locatie_cp %>%
+  ggplot(aes(x= jaar, y = aantalBezoekGemiddeld,  group = locatie, colour = locatie)) + 
+  geom_point(alpha = 0.4) +  
+geom_line(linetype = 2,  alpha =0.3, size = 0.4, colour = "black") +
+ facet_wrap(~ meetnet, scales = "free_y", ncol = 3) +
+ labs(y = "Gemiddeld aantal getelde nesten per bezoek", x = "Jaar") +
+  theme(legend.position = "hide")
+
+```
+
+
+```{r verkenningTrendzoogdierenTrans, message=FALSE, warning= FALSE, fig.width= 4, fig.height= 4, fig.cap = "Gemiddeld aantal getelde individuen per jaar met 95%-betrouwbaarheidsinterval (rood) en aantal getelde individuen per bezoek (grijs)"}
+
+aantallen_hazelmuis_wide %>%
+  ggplot(aes(x= jaar, y = aantal_netto)) + 
+  geom_point(alpha = 0.6, colour = inbo.grijs) +
+  stat_summary(fun.data = "mean_cl_boot", colour = INBOred, size = 1, alpha = 0.8) +
+ facet_wrap(~ meetnet, scales = "free_y", ncol = 3) +
+ labs(y = "Aantal getelde nesten", x = "Jaar") +
+  theme(legend.position = "bottom")
+
+```
