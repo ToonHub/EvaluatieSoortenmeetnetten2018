@@ -102,7 +102,7 @@ tabel_meetnetten2 %>%
 ### Tijdstippen van de tellingen
 
 Figuur \@ref(fig:figuurBezoekenlibellen) geeft een overzicht van de tijdstippen van de bezoeken.   
-```{r figuurBezoekenlibellen, message= FALSE, warning= FALSE, fig.height= 7, fig.width= 6.5,  fig.cap = "Overzicht tijdstippen waarop tellingen werden uitgevoerd in 2017" }
+```{r figuurBezoekenlibellen, message= FALSE, warning= FALSE, fig.height= 7, fig.width= 6.5,  fig.cap = "Overzicht tijdstippen waarop tellingen werden uitgevoerd in 2018" }
 
 colors_status <- c("Niet volledig conform protocol" = inbo.rood, "Conform protocol" = inbo.groen, "Geen veldwerk mogelijk" = inbo.grijs)
 
