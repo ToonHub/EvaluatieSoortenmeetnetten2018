@@ -119,7 +119,7 @@ Alle bezoeken van hazelmuis werden conform protocol uitgevoerd.
 
 #### Overzicht totale aantallen per bezoek
 
-```{r figuurAantallenZoogdieren, warning= FALSE}
+```{r figuurAantallenZoogdieren, warning= FALSE, message = FALSE}
  aantallen_figuur %>%
     filter(soortgroep == "zoogdieren") %>%
     figuur_aantallen_jaar(legend_position = "bottom")
@@ -175,8 +175,8 @@ aantallen_hazelmuis_wide %>%
   geom_point(alpha = 0.6) + 
   geom_smooth(method = "gam", method.args = list(family = poisson),formula = y ~ s(x, bs = "cs", k = 6) , size = 0.4, colour = "blue") +
   facet_grid(meetnet ~ jaar, scales = "free_x") +
-  theme(legend.position = 'none', axis.text.x = element_text(angle = 90))
-  labs (x = "Datum bezoek",y= "Aantal (nieuw) getelde nesten")
+  theme(legend.position = 'none', axis.text.x = element_text(angle = 90)) + 
+  labs (x = "Datum bezoek", y= "Aantal (nieuw) getelde nesten")
 
 ```
 
