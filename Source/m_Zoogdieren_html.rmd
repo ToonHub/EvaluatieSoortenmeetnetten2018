@@ -50,19 +50,20 @@ Tabel \@ref(tab:overzichtTellingenzoogdieren) geeft een overzicht van de meetnet
 * de jaardoelen: het aantal te tellen locaties voor een bepaald jaar; 
 * het aantal tellingen conform protocol;
 * het aantal tellingen dat niet kon worden uitgevoerd door overmacht; en
-* het aantal voldoende getelde meetnetlocaties: dit zijn de locaties waar het aantal tellingen werd gehaald binnen de afgesproken telperiode, conform het protocol. Ook de tellingen die niet konden uitgevoerd worden door overmacht worden hiervoor meegrekend.
+* het aantal voldoende getelde meetnetlocaties: dit zijn de locaties waar het aantal tellingen werd gehaald binnen de afgesproken telperiode, conform het protocol. Ook de tellingen die niet konden uitgevoerd worden door overmacht worden hiervoor meegrekend;
+* de oppervlakte geteld (voor Hamster).
 
 ```{r overzichtTellingenzoogdieren, message= FALSE, warning= FALSE, results= 'asis'}
 
-tabel_meetnetten2 %>%
+tabel_meetnetten3 %>%
    filter(Soortgroep == "zoogdieren") %>%
   filter(Meetcyclus == 1) %>%
-  mutate("Oppervlakte geteld (ha)" = c( 82.8, 73.4, NA, NA, NA)) %>%
+  #mutate("Oppervlakte geteld (ha)" = c( 82.8, 73.4, NA, NA, NA)) %>%
   select(Meetnet, Protocol, everything()) %>%
   arrange(Meetnet, Protocol, Jaar)   %>%
-  select(-Soortgroep, -"Type locatie", -"Meetnetlocaties voldoende geteld - nieuw", -"Meetnetlocaties voldoende geteld - cyclus", -Meetcyclus, -"Doel meetcyclus") %>%
+  select(-Soortgroep, -"Type locatie", -"Gebied", -"Meetnetlocaties voldoende geteld - nieuw", -"Meetnetlocaties voldoende geteld - cyclus", -Meetcyclus, -"Doel meetcyclus") %>%
   kable(booktabs = TRUE, 
-        caption = "Overzicht van de tellingen voor de overigemeetnetten met 1-jarige meetcyclus en de vooropgestelde doelen", 
+        caption = "Overzicht van de tellingen voor de zoogdieren met 1-jarige meetcyclus en de vooropgestelde doelen", 
         format = "html",
         align = c("l", "l", "c","c","c", "c", "c", "c", "c", "c", "c")) %>%
  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"),
@@ -75,6 +76,36 @@ tabel_meetnetten2 %>%
 
   
 ```
+Tabel \@ref(tab:overzichtTellingenDas3) geeft een overzicht van de meetnetten met een meetcyclus van 3 jaar. De tabel geeft volgende bijkomende informatie: 
+
+* de doelen voor de meetcyclus: het aantal te tellen locaties voor de volledige meetcyclus; 
+* de nieuwe getelde meetnetlocaties: de locaties die voor een eerste maal (voldoende) werden geteld binnen de meetcyclus;
+* het totaal aantal getelde locaties binnen een meetcyclus.
+
+```{r overzichtTellingenDas3, message= FALSE, warning= FALSE, results= 'asis'}
+
+tabel_meetnetten3 %>%
+   filter(Soortgroep == "zoogdieren") %>%
+  filter(Meetcyclus > 1) %>%
+  filter(`Type locatie` == "Meetnetlocatie") %>%
+  select(-Soortgroep, -"Type locatie", -Meetcyclus, -Jaardoel, -starts_with("Telling"), -starts_with("Opp")) %>%
+  select(Meetnet, Protocol, Gebied, everything()) %>%
+  arrange(Meetnet, Protocol) %>%
+  kable(booktabs = TRUE, 
+        caption = "Overzicht van de tellingen voor de inhaalslag dassen en de vooropgestelde doelen", 
+        format = "html",
+        align = c("l", "l", "c","c","c", "c", "c", "c", "c", "c", "c")) %>%
+ kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"),
+               font_size = 11) %>%
+  #   column_spec(4, width = "2cm") %>%
+  # column_spec(5, width = "2cm") %>%
+  # column_spec(6, width = "2cm") %>%
+  # column_spec(7, width = "2cm") %>%
+  collapse_rows(columns = c(1, 2) )
+  
+```
+
+
 
 ### Tijdstippen van de tellingen
 
