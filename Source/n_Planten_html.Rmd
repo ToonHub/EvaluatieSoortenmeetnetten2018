@@ -1,0 +1,723 @@
+# Vaatplanten
+
+## Meetnetkarakteristieken
+
+Tabel \@ref(tab:MeetnKaraktplanten1) en Tabel \@ref(tab:MeetnKaraktplanten2) geven een overzicht van de karakteristieken van de vaatplantenrmeetnetten (Van Landuyt *et al.* 2015).
+
+```{r MeetnKaraktplanten1, message= FALSE, warning= FALSE, results= 'asis'}
+
+bezoeken_planten <- filter(bezoeken, soortgroep == "planten")
+planten <- unique(bezoeken_planten$meetnet)
+
+meetnetKarakt %>%
+  filter(Soortengroep == "Vaatplanten") %>%
+  select(Meetnet, Protocol, Type, Meetnetlocaties, 'Meetcyclus (jaar)'= Meetcyclus, Start = Opstartjaar) %>%
+  unique() %>%
+  kable(caption = "Overzicht van de karakteristieken van de vlindermeetnetten: veldprotocol, type meetnet (integraal of steekproef), aantal meetnetlocaties en de meetcyclus in jaren", 
+        row.names = FALSE, 
+        booktabs = TRUE,
+        format = "html") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive")) %>%
+  column_spec(5, width = "2cm")
+  
+```
+
+
+```{r MeetnKaraktplanten2, message= FALSE, warning= FALSE, results= 'asis'}
+
+meetnetKarakt %>%
+  filter(Soortengroep == "Vaatplanten") %>%
+  select(Meetnet,  'Bezoeken (/jaar)' = Bezoeken, 'Begin telperiode' = Begin_telperiode, 'Einde telperiode' = Einde_telperiode) %>%
+  unique() %>%
+  kable(caption = "Overzicht van de karakteristieken van de vlindermeetnetten: aantal bezoeken per jaar, begin en einde van de telperiode", row.names = FALSE, booktabs = TRUE, format = "html", align = c("l","c","c","c")) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive")) %>%
+  # column_spec(1, width = "2cm") %>%
+   column_spec(2) %>%
+  # column_spec(5, width = "2cm") %>%
+ # column_spec(6, width = "2cm")%>%
+  collapse_rows(columns = 1)
+
+```
+
+
+```{r figuurBezoekenPlanten, message= FALSE, warning= FALSE, fig.height= 7, fig.width= 6.5,  fig.cap = "Overzicht tijdstippen waarop tellingen werden uitgevoerd in 2017" }
+
+# bezoeken %>%
+#   filter(soortgroep == "planten") %>%
+#   filter(jaar == "2018") %>%
+#   select(meetnet,locatie, datum,  bezoek_status) %>%
+#   unique() %>%
+#   ggplot(aes(x = datum, fill = bezoek_status)) +
+#   geom_histogram(binwidth = 7, colour = "white") +
+#   facet_wrap( ~ meetnet, scales = "free_x", nrow = 3) +
+#   labs(x = "Datum bezoek", y = "Aantal bezoeken")  +
+#   theme( axis.text.x = element_text(angle = 90, hjust = 1))
+
+```
+
+## Afwijkingen van het protocol
+
+```{r afwijkingenProtocolPlantjes, message= FALSE, warning= FALSE}
+
+
+bezoeken %>% 
+  filter(soortgroep == "planten") %>% 
+  filter(jaar == "2018") %>% 
+  filter(bezoek_status != "Conform protocol") %>% 
+  select(meetnet, datum, locatie, "bezoek status" = bezoek_status, notes) %>%
+  mutate(notes = gsub("\n", ". ",notes)) %>%
+  kable(booktabs = TRUE, escape = TRUE) %>%
+  kable_styling(latex_options =  c( "hold_position")) %>%
+    column_spec(5, width = "4cm")
+  
+
+
+```
+
+
+
+```{r overzichtTellingenPlanten, message= FALSE, warning= FALSE, results= 'asis', eval = FALSE}
+
+tabel_meetnetten2 %>%
+   filter(Soortgroep == "planten") %>%
+  filter(Jaar == 2018) %>%
+  select(-Soortgroep, -"Type locatie", -"Meetnetlocaties voldoende geteld - nieuw", -"Meetnetlocaties voldoende geteld - cyclus", -Meetcyclus, -"Doel meetcyclus", -"Jaardoel") %>%
+  kable(booktabs = TRUE, 
+        caption = "Overzicht van de in 2018 ingevoerde bezoeken in meetnetten.be voor de plantenmeetnetten", 
+        format = "html",
+        align = c("l", "l", "c","c","c", "c", "c", "c", "c", "c", "c")) %>%
+ kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"),
+               font_size = 11) %>%
+  #   column_spec(4, width = "2cm") %>%
+  # column_spec(5, width = "2cm") %>%
+  # column_spec(6, width = "2cm") %>%
+  # column_spec(7, width = "2cm") %>%
+  collapse_rows(columns = c(1, 2))
+  
+overzicht_planten <- tabel_meetnetten2 %>%
+   filter(Soortgroep == "planten") %>%
+   filter(Jaar == 2018)
+
+totaal <- sum(overzicht_planten$`Meetnetlocaties voldoende geteld - totaal`)
+totaal_bezoek <- sum(overzicht_planten$`Tellingen conform protocol`)
+
+```
+
+
+## Overzicht van de uitgevoerde tellingen
+
+
+```{r locatiesMeetnetten, message= FALSE, warning= FALSE, results='hide'}
+
+# alle meetnetlocaties in meetnetten.be
+locaties_planten_wp <- werkpakketten %>%
+  filter(soortgroep == "planten") %>%
+  select( meetnet, locatie) %>%
+  unique() %>%
+  mutate(type = "inMeetnet") 
+
+locaties_geschrapt <- read.csv2("../Data/Planten/TeSchrappenLocaties2019.csv") %>%
+  rename(locatie= Locatie, meetnet = Meetnet) %>%
+  mutate(type <- "geschrapt")
+
+locaties_planten <- bind_rows(locaties_planten_wp, locaties_geschrapt) %>%
+  mutate(locatie = as.character(locatie),
+         ifbl_tag = substr(locatie, nchar(locatie) - 8, nchar(locatie) - 1)) %>%
+  group_by(meetnet, locatie, ifbl_tag) %>%
+  summarise(type = ifelse("geschrapt" %in% type, "geschrapt", "inMeetnet")) %>%
+  ungroup() %>%
+  group_by(meetnet, type) %>%
+  mutate(nMeetnetlocaties = n_distinct(locatie)) %>%
+  ungroup() %>%
+  group_by(type) %>%
+  mutate(nMeetnetlocatiesTotaal = n_distinct(locatie, meetnet)) %>%
+  ungroup() 
+```
+
+
+```{r observatiesPINK, message= FALSE, warning= FALSE, results='hide'}
+
+planten_meetvariabelen <- read.csv2("../Data/Planten/PlantenMeetvariabelen.csv") %>%
+  rename(meetnet = Meetnet)
+
+observaties_PINK2016 <- read.csv2("../Data/Planten/Versie2018-01-11/DataPINK2016.csv")
+
+observaties_PINK2017 <- read.csv2("../Data/Planten/Versie2018-01-11/DataPINK2017.csv") %>%
+  select(-IDENT)
+
+observaties_PINK <- bind_rows(observaties_PINK2016, observaties_PINK2017) %>%
+  mutate(meetnet = ifelse(SOORTSCODE == "gentnuli", "Duingentiaan",
+                                   ifelse(SOORTSCODE == "hermimon", "Honingorchis",NA))) 
+
+observaties_PINK_Shape <- SpatialPointsDataFrame(coords= cbind(observaties_PINK$X_PROJ,observaties_PINK$Y_PROJ), 
+                                                 data = observaties_PINK)
+
+ifbl_kwartier <- readOGR("../Data/Planten/.","ifblkwart", verbose = FALSE)
+
+proj4string(observaties_PINK_Shape) <- proj4string(ifbl_kwartier)
+
+observaties_PINK_Shape$ifbl_tag <- over(observaties_PINK_Shape,ifbl_kwartier)$TAG
+
+data_planten_PINK <- observaties_PINK_Shape@data %>%
+  mutate(uitvoerder = "INBO",
+         traject = "Tracks",
+         datum = format(as.Date(Datum, format = "%d/%m/%Y"),"%Y-%m-%d"),
+         jaar = as.numeric(format(as.Date(datum, format = "%Y-%m-%d"),"%Y")),
+         jaar = ifelse(is.na(jaar), 2017, jaar),
+         FloronCode = toupper(ABUNDANTIE)) %>%
+  left_join(planten_meetvariabelen, by = "meetnet") %>%
+  select(meetnet,
+         ifbl_tag,
+         datum,
+         jaar,
+         x = X_PROJ, 
+         y = Y_PROJ,
+         FloronCode,
+         meetvariabele,
+         uitvoerder,
+         traject
+         ) %>%
+  filter(!is.na(meetnet))
+
+# # locaties die door PINK worden opgevolgd
+# PINK_locaties <- read.csv2("../Data/Planten/PINK_locaties.csv")
+# PINK_locaties$Locatie <- as.character(PINK_locaties$Locatie)
+# PINK_locaties$ifbl_tag <- substr(PINK_locaties$Locatie, nchar(PINK_locaties$Locatie) - 8, nchar(PINK_locaties$Locatie) - 1)
+```
+
+
+```{r dataNP, message= FALSE, warning= FALSE, results = 'asis'}
+
+# ruwe gegevenws aangeleverd door NP
+
+data_ruw_2016 <- read.csv2("../Data/Planten/Versie2018-01-29/Definitievedataplantenmeetnet2016.csv", stringsAsFactors = FALSE) %>%
+  select(id, meetnet = naam_nl, ifbl_tag, datum, x, y, aantal, FloronCode = Floron.code, typewaarneming) %>%
+  mutate(ifbl_tag = tolower(ifbl_tag),
+         datum = format(as.Date(datum, format = "%d/%m/%Y"),"%Y-%m-%d"),
+         jaar = as.numeric(format(as.Date(datum, format = "%Y-%m-%d"),"%Y"))) 
+  
+data_ruw_2017 <- read.csv2("../Data/Planten/Versie2018-01-29/Definitievedataplantenmeetnet2017.csv", stringsAsFactors = FALSE) %>%
+  select(id, meetnet = naam_nl, ifbl_tag, datum,  x, y, aantal, FloronCode = bijzonderheden, typewaarneming)%>%
+  mutate(ifbl_tag = tolower(ifbl_tag),
+         datum = format(as.Date(datum, format = "%d/%m/%Y"),"%Y-%m-%d"),
+         jaar = as.numeric(format(as.Date(datum, format = "%Y-%m-%d"),"%Y")),
+         jaar = ifelse(is.na(jaar), 2017, jaar)) 
+
+data_ruw_2018 <-  read.csv2("../Data/Planten/Versie2019-01-08/Plantendata2018_v2.csv", stringsAsFactors = FALSE) %>%
+  select(id, meetnet = naam_nl, ifbl_tag, datum,  x, y, aantal, FloronCode = Floroncode, typewaarneming)%>%
+  mutate(ifbl_tag = tolower(ifbl_tag),
+         datum = format(as.Date(datum, format = "%d/%m/%Y"),"%Y-%m-%d"),
+         jaar = as.numeric(format(as.Date(datum, format = "%Y-%m-%d"),"%Y"))) 
+
+data_planten_NP <- bind_rows(data_ruw_2016, data_ruw_2017, data_ruw_2018) %>%
+  mutate(uitvoerder = "vrijwilligers") %>%
+  filter(meetnet != "") %>%
+  left_join(planten_meetvariabelen, by = "meetnet") %>%
+  mutate(FloronCode = ifelse(FloronCode %in% c("A", "B", "C", "D", "E", "F", "0"),
+                                    FloronCode,
+                                    ifelse(meetvariabele == "Aantal" | aantal == 0, 
+                                           ifelse(aantal == 0, "0",
+                                           ifelse(aantal == 1, "A",
+                                           ifelse(aantal < 6, "B",
+                                           ifelse(aantal < 26, "C",
+                                           ifelse(aantal < 51, "D",
+                                           ifelse(aantal < 501, "E","F")))))),
+                                           NA)))
+
+
+# verzicht trajecten aangeleverd door NP
+
+trajecten2016 <- read.csv2("../Data/Planten/Overzicht_tracks_2016.csv") %>%
+  mutate(locatie = as.character(locatie),
+         ifbl_tag = substr(locatie, nchar(locatie) - 8, nchar(locatie) - 1))
+
+bezoeken2017NP_ruw <- read.csv2("../Data/planten/versie2018-01-29/Overzicht_plantenmeetnet2017_v2018-01-29.csv", stringsAsFactors = FALSE)
+
+trajecten2017 <- bezoeken2017NP_ruw %>%
+  filter(Soortnaam != "") %>%
+  rename(meetnet = Soortnaam, ifbl_tag = IFBL) %>%
+  mutate(Naam.locatie = as.character(Naam.locatie),
+         ifbl_tag = tolower(ifbl_tag),
+         jaar = 2017,
+         Track_opgeleverd = as.numeric(ifelse(! Track_opgeleverd %in% c("1","0"),  "1", Track_opgeleverd )), # bij enkele bezoeken worden opmerkingen gegeven --> hiervoor zijn de tracks ok
+         traject = ifelse(!is.na(Track_papier) & Track_papier == 1, "Kaart",
+                             ifelse(Track_digitaal == 1, "Tracks", NA))) %>%
+  filter(Track_opgeleverd == 1) %>%
+  select(meetnet, jaar, locatie = Naam.locatie, traject, ifbl_tag) 
+
+trajecten2018 <- read.csv2("../Data/Planten/Versie2019-01-08/plantenbezoeken2018.csv", stringsAsFactors = FALSE)
+
+trajecten2018 <- trajecten2018 %>%
+  mutate(jaar = 2018,
+         traject = ifelse(Track.export == "GIS", "Tracks",
+                          ifelse(Track.export == "Papier", "Kaart", Track.export)),
+         ifbl_tag = substr(Naam.locatie, nchar(Naam.locatie) - 8, nchar(Naam.locatie) - 1)) %>%
+  select(meetnet = Soortnaam, locatie = Naam.locatie, jaar, traject, ifbl_tag) %>%
+  filter(traject != "Geen track")
+
+trajecten <- bind_rows(trajecten2016, trajecten2017, trajecten2018) %>%
+  select(-locatie)
+
+data_planten_NP <- data_planten_NP %>%
+  left_join(trajecten, by = c("meetnet", "ifbl_tag", "jaar")) %>%
+  mutate(traject = ifelse(is.na(traject), "Geen", traject))
+
+```
+
+```{r dataSamenvoegen, message= FALSE, warning= FALSE, results = 'asis'}
+
+data_planten <- bind_rows(data_planten_PINK, data_planten_NP) %>%
+  select(-typewaarneming) %>%
+  left_join(select(locaties_planten, meetnet, locatie, ifbl_tag, type), by = c("meetnet", "ifbl_tag")) %>%
+  mutate(type = ifelse(is.na(type), "nieuweLocatie", type)) %>%
+  rename(id_wnm = id) %>%
+  arrange(meetnet, locatie, ifbl_tag, jaar) %>%
+  select(meetnet, ifbl_tag, locatie, everything())
+
+write.csv2(data_planten, "../Output/observaties_vaatplantenmeetnetten_versie2019-01-23.csv")
+
+``
+
+
+```{r samenvattingLocatie, message= FALSE, warning= FALSE, results = 'asis'}
+
+overzicht_locaties_planten_geteld <- data_planten %>%
+  group_by(meetnet, jaar, ifbl_tag,  meetvariabele) %>%
+  summarise(nObs = n(),
+            nObsLoc = n_distinct(x, y),
+            nObsCP = sum((!is.na(FloronCode) & FloronCode != ""), na.rm = TRUE ),
+            somAantal = sum(aantal),
+            traject = ifelse("Tracks" %in% traject, 1,
+                             ifelse("Kaart" %in% traject, 1, 0)))
+
+overzicht_locaties_planten <- locaties_planten %>%
+  full_join(overzicht_locaties_planten_geteld, by =c("meetnet", "ifbl_tag")) %>%
+  mutate(type = ifelse(is.na(type), "nieuweLocatie", type),
+         nObs = ifelse(is.na(nObs), 0 , nObs),
+         nObsCP = ifelse(is.na(nObsCP), 0 , nObsCP),
+         nObsLoc = ifelse(is.na(nObsLoc), 0 , nObsLoc),
+         VoldoendeGeteld = ifelse(nObsCP > 0, 1, 0),
+         traject = ifelse(is.na(traject), 0, traject)) %>%
+  group_by(meetnet, locatie, ifbl_tag, type) %>%
+  mutate(Temp1 = rank(desc(VoldoendeGeteld)) * 10 + rank(jaar),
+         VoldoendeGeteldNieuw = ifelse((rank(Temp1) == 1) & (VoldoendeGeteld == 1), 1, 0),
+         Temp = rank(desc(traject)) * 10  + rank(jaar),
+         TrajectNieuw = ifelse((rank(Temp) == 1) & (traject == 1), 1, 0)) %>%
+  ungroup() %>%
+  select(-Temp, - Temp1) 
+
+overzicht_meetnetten_planten <- overzicht_locaties_planten_uniek %>%
+  group_by(meetnet, jaar, type, nMeetnetlocaties, nMeetnetlocatiesTotaal) %>%
+  summarise(AantalLocatiesGeteld = sum(VoldoendeGeteld),
+            AantalLocatiesGeteldNieuw = sum(VoldoendeGeteldNieuw),
+            AantalTraject = sum(traject),
+            AantalTrajectNieuw = sum(TrajectNieuw)
+            ) %>%
+  ungroup() %>%
+  group_by(meetnet, type) %>%
+  mutate(AantalLocatiesGeteldCyclus = cumsum(AantalLocatiesGeteldNieuw),
+         AantalTrajectCyclus = cumsum(AantalTrajectNieuw)) %>%
+  ungroup() %>%
+  filter(!is.na(jaar))
+
+overzicht_planten <- overzicht_meetnetten_planten %>%
+  group_by(type, jaar, nMeetnetlocatiesTotaal) %>%
+  summarise(AantalLocatiesGeteld = sum(AantalLocatiesGeteld),
+            AantalLocatiesGeteldNieuw = sum(AantalLocatiesGeteldNieuw),
+            AantalTraject = sum(AantalTraject),
+            AantalTrajectNieuw = sum(AantalTrajectNieuw)) %>%
+  ungroup() %>%
+  group_by(type) %>%
+  mutate(AantalLocatiesGeteldCyclus = cumsum(AantalLocatiesGeteldNieuw),
+         AantalTrajectCyclus = cumsum(AantalTrajectNieuw)) %>%
+  ungroup() %>%
+  filter(!is.na(jaar))
+  
+write.csv2(overzicht_locaties_planten, "../Output/Overzicht_locatiesPlanten_versie2019-01-16.csv", row.names = FALSE)     
+write.csv2(overzicht_meetnetten_planten, "../Output/Overzicht_meetnettenPlanten_versie2019-01-16.csv", row.names = FALSE)     
+write.csv2(overzicht_planten, "../Output/Overzicht_meetnettenPlantenTotaal_versie2019-01-16.csv", row.names = FALSE)     
+
+```
+
+Het monitoringprotocol stelt dat binnen een locatie de geschikte leefgebieden systematisch afgezocht worden en dat op elk punt waar de soort wordt aangetroffen een schatting van het aantal individuen of de oppervlakte van de groeiplaats wordt gemaakt gebruik makend van de FLORON schaal. Het gevolgde traject moet geregistreerd worden met GPS. Tabel \@ref(tab:tabellenPlanten2) geef per meetnet en per jaar het aantal locaties waarin een observatie gebeurde gebruik makend van de FLORON schaal en het aantal locaties waarvoor het traject werd geregistreerd. We maken onderscheid tussen:
+
+* Meetnetlocaties geteld - totaal: het totaal aantal getelde locaties in een jaar;
+* Meetnetlocaties geteld - nieuw: het aantal locaties dat voor een eerste maal geteld werd binnen de meetcyclus;
+* Meetnetlocaties geteld - cyclus: het totaal aantal getelde locaties in een meetcyclus.
+
+Voor trajecten maken we eenzelfde onderscheid.
+
+In Tabel \@ref(tab:tabellenPlanten3) geven we een overzicht van de tellingen in locaties die niet tot het initiële steekproefkader behoren. Deze tellingen kunnen we gebruiken om het steekproefkader bij te werken. Tabel \@ref(tab:tabellenPlanten3) geeft een overzicht van de meetnetlocaties die geschrapt werden uit het steekproefkader omdat ze niet toegankelijk zijn of omdat er voldoende indicaties zijn dat de soort er niet aanwezig is.
+
+Tabel \@ref(tab:tabellenPlanten) geeft de totalen weer over alle plantenmeetnetten. 
+
+
+
+
+```{r tabellenPlanten2, message= FALSE, warning= FALSE, results = 'asis'}
+
+tabel_overzicht_meetnetten <- overzicht_meetnetten_planten %>%
+  filter(type == "inMeetnet") %>%
+  select( Meetnet = meetnet,
+          'Aantal meetnetlocaties' = nMeetnetlocaties,
+          Jaar = jaar,
+          'Meetnetlocaties geteld - totaal' = AantalLocatiesGeteld,
+          'Meetnetlocaties geteld - nieuw' = AantalLocatiesGeteldNieuw,
+          'Meetnetlocaties geteld - cyclus' = AantalLocatiesGeteldCyclus,
+          'Trajecten - totaal' = AantalTraject,
+          'Trajecten - nieuw' = AantalTrajectNieuw,
+          'Trajecten - cyclus' = AantalTrajectCyclus)
+
+tabel_overzicht_meetnetten %>%
+  kable(booktabs = TRUE, 
+        caption = "Overzicht van de tellingen voor de plantenmeetnetten", 
+        format = "html", 
+        align =c("l","c","c","c","c","c","c","c", "c", "c")) %>%
+ kable_styling(bootstrap_options = c( "hover", "condensed", "responsive"),
+         font_size = 11)  %>%
+  collapse_rows(columns = c(1, 2))
+```
+
+
+```{r tabellenPlanten3, message= FALSE, warning= FALSE, results = 'asis'}
+
+tabel_overzicht_meetnetten_nieuw <- overzicht_meetnetten_planten %>%
+  filter(type == "nieuweLocatie") %>%
+  select( Meetnet = meetnet,
+          Jaar = jaar,
+          'Extra locaties geteld - totaal' = AantalLocatiesGeteld,
+          'Extra locaties geteld - nieuw' = AantalLocatiesGeteldNieuw,
+          'Extra locaties geteld - cyclus' = AantalLocatiesGeteldCyclus,
+          'Trajecten - totaal' = AantalTraject,
+          'Trajecten - nieuw' = AantalTrajectNieuw,
+          'Trajecten - cyclus' = AantalTrajectCyclus)
+
+tabel_overzicht_meetnetten_nieuw %>%
+  kable(booktabs = TRUE, 
+        caption = "Overzicht van de tellingen inlocaties die niet tot het initiële steekproefkader behoren", 
+        format = "html", 
+        align =c("l","c","c","c","c","c","c","c", "c", "c")) %>%
+ kable_styling(bootstrap_options = c( "hover", "condensed", "responsive"),
+         font_size = 11) %>%
+  collapse_rows(columns = 1)
+```
+
+
+```{r tabellenPlanten4, message= FALSE, warning= FALSE, results = 'asis'}
+
+tabel_overzicht_meetnetten_geschrapt <- overzicht_meetnetten_planten %>%
+  filter(type == "geschrapt") %>%
+  select( Meetnet = meetnet,
+          'Aantal geschrapte meetnetlocaties' = nMeetnetlocaties) %>%
+  unique()
+
+tabel_overzicht_meetnetten_geschrapt %>%
+  kable(booktabs = TRUE, 
+        caption = "Overzicht van de tellingen inlocaties die niet tot het initiële steekproefkader behoren", 
+        format = "html", 
+        align =c("l","c","c","c","c","c","c","c", "c", "c")) %>%
+ kable_styling(bootstrap_options = c( "hover", "condensed", "responsive"),
+         font_size = 11) 
+```
+
+
+```{r tabellenPlanten, message= FALSE, warning= FALSE, results = 'asis'}
+
+tabel_overzicht_totaal <- overzicht_planten %>%
+  #filter(type != "geschrapt") %>%
+  mutate(Type = ifelse(type == "inMeetnet", 
+                                 "meetnetlocatie",
+                                 ifelse( type == "nieuweLocatie",
+                                         "extra locatie",
+                                         "geschrapte locatie"))) %>%
+  select( Type,
+          'Aantal meetnetlocaties' = nMeetnetlocatiesTotaal,
+          Jaar = jaar,
+          'Locaties geteld - totaal' = AantalLocatiesGeteld,
+          'Locaties geteld - nieuw' = AantalLocatiesGeteldNieuw,
+          'Locaties geteld - cyclus' = AantalLocatiesGeteldCyclus,
+          'Trajecten - totaal' = AantalTraject,
+          'Trajecten - nieuw' = AantalTrajectNieuw,
+          'Trajecten - cyclus' = AantalTrajectCyclus)
+
+tabel_overzicht_totaal %>%
+  kable(booktabs = TRUE, 
+        caption = "Overzicht van de tellingen voor de plantenmeetnetten: totaal", 
+        format = "html", 
+        align =c("l","c","c","c","c","c","c","c", "c", "c")) %>%
+ kable_styling(bootstrap_options = c( "hover", "condensed", "responsive"),
+         font_size = 11) %>%
+   collapse_rows(columns = c(1, 2) )
+```
+
+
+```{r dataBezoekenNP, message= FALSE, warning= FALSE, results = 'asis', eval = FALSE}
+
+# bezoekenNP_ruw <- read.csv2("Data/planten/versie2017-11-28/overzicht_planten_2017.csv")
+# 
+# bezoekenNP <- bezoekenNP_ruw %>%
+#   filter(Soortnaam != "") %>%
+#   rename(meetnet = Soortnaam) %>%
+#   mutate(Naam.locatie = as.character(Naam.locatie))
+# 
+# bezoekenNP$ifbl_tag <- ifelse (substring(bezoekenNP$Naam.locatie, 
+#                                          nchar(bezoekenNP$Naam.locatie),
+#                                          nchar(bezoekenNP$Naam.locatie)) == ")",
+#                                substring(bezoekenNP$Naam.locatie, 
+#                                          nchar(bezoekenNP$Naam.locatie) - 8,
+#                                          nchar(bezoekenNP$Naam.locatie) - 1),
+#                                bezoekenNP$Naam.locatie)
+
+bezoekenNP <- bezoekenNP %>%
+ left_join(overzicht_locaties_wide_unique, by = c("meetnet","ifbl_tag"))  %>%
+   filter(Uitgevoerd_2016 ==1 | Uitgevoerd_2017nieuw == 1 | Nieuwe_locaties == 1 | Herhaling_2017 == 1) 
+
+bezoekenNP[is.na(bezoekenNP)] <- 0
+
+bezoekenNP$NoData <- ifelse(bezoekenNP$nObs2016 == 0 & bezoekenNP$nObs2017 == 0,1 ,0)
+bezoekenNP$NoDataCP <- ifelse(bezoekenNP$nObsCP2016 == 0 & bezoekenNP$nObsCP2017 == 0,1 ,0)
+
+bezoekenNP_noData <- bezoekenNP %>%
+  filter(NoDataCP == 1 ) %>%
+  select(meetnet, locatie = Naam.locatie, ifbl_tag, Uitgevoerd_2016, Uitgevoerd_2017nieuw, Nieuwe_locaties, Herhaling_2017, Track_opgeleverd, NoData, NoDataCP) %>% 
+  left_join(select(locaties_planten, -locatie), by = c("meetnet", "ifbl_tag")) %>%
+  mutate(type = ifelse(is.na(type), "nieuweLocatie", type))
+
+#write.csv2(bezoekenNP_noData, "../Output/planten_ontbrekende_data_v2018-01-11.csv")
+
+bezoekenNP_NoMatch <- bezoekenNP %>%
+  select(meetnet, locatie = Naam.locatie, ifbl_tag, Uitgevoerd_2016, Uitgevoerd_2017nieuw, Nieuwe_locaties, Herhaling_2017, Track_opgeleverd, NoData, NoDataCP, nObsCP2016, nObsCP2017) %>%
+  mutate(dataCP2016 = ifelse(nObsCP2016 > 0, 1, 0),
+         dataCP2017 = ifelse(nObsCP2017 > 0, 1, 0)) %>%
+  mutate(geenBezoek2016 = Uitgevoerd_2016 == 1 & dataCP2016 ==0,
+         geenBezoek2017 = (Uitgevoerd_2017nieuw == 1 | Herhaling_2017 == 1) & dataCP2017 == 0 ) %>%
+  filter(geenBezoek2016 | geenBezoek2017) %>%
+  filter(NoDataCP != 1)
+
+#write.csv2(bezoekenNP_NoMatch, "../Output/planten_jaarBezoekFoutief_v2018-01-29.csv")
+```
+
+## Verkenning van de ingevoerde gegevens
+
+Figuur \@ref(fig:figaantallenPlanten) toont de geobserveerde aantalsklassen en Figuur \@ref(fig:figOppPlanten) toont de geobserveerde oppervlakteklassen uitgedrukt in de FLORON schaal (Tabel \@ref(tab:TabelFloron)) voor de verschillende vaatplantenmeetnetten. 
+
+```{r aantallenPlanten, message= FALSE, warning= FALSE}
+observaties_PINK <- observaties_PINK2 %>%
+  select(meetnet, jaar, x = X_PROJ, y = Y_PROJ, "FLORONcode" = Abundantie, ifbl_tag, uitvoerder) %>%
+  mutate(FLORONcode = toupper(FLORONcode))
+
+observaties_NP <- data_planten %>%
+  select(meetnet, jaar, x, y, "FLORONcode" = Floron.code, ifbl_tag, uitvoerder) %>%
+  filter(!is.na(x))
+
+planten_meetvariabelen <- read.csv2("../Data/Planten/PlantenMeetvariabelen.csv")
+planten_meetvariabelen <- rename(planten_meetvariabelen, meetnet = Meetnet, meetvariabele = Meetvariabele)
+
+observaties_alle <- bind_rows(observaties_PINK, observaties_NP) %>%
+  left_join(planten_meetvariabelen, by ="meetnet") %>%
+  left_join(select(overzicht_locaties_planten_uniek, meetnet, locatie, ifbl_tag, type), 
+                              by = c("meetnet", "ifbl_tag"))
+
+FLORON <- read.csv2("../Data/Planten/FLORON.csv")
+
+write.csv2(observaties_alle, "../Output/observaties_vaatplantenmeetnetten_versie2019-01-23.csv")
+```
+
+
+```{r TabelFloron, message= FALSE, warning= FALSE}
+FLORON %>%
+  rename("Aantal individuen" = Aantal_individuen, "Oppervlakte groeiplaats (m²)" = Oppervlakte_groeiplaats_m2 ) %>%
+  kable(caption = "FLORON schaal", 
+        format = "html",
+        align = c("l", "c", "c")) %>%
+  kable_styling(bootstrap_options = c( "hover", "condensed", "responsive"))
+  
+
+```
+
+```{r figaantallenPlanten, message= FALSE, warning= FALSE, fig.height=11, fig.width = 6.5, fig.cap = "Geobserveerde aantalsklassen vaatplantenmeetnetten"}
+observaties_alle %>%
+  filter(meetvariabele == "Aantal") %>%
+  filter(FLORONcode %in% c("A","B","C","D","E","F","0")) %>%
+  ggplot(aes(x=FLORONcode, fill = type)) + 
+  geom_bar() + 
+  facet_grid(meetnet ~ jaar, scales = "free") +
+  labs(y = "Aantal tellingen") +
+  theme(legend.position= "bottom", strip.text = element_text(size=8), strip.text.y = element_text(angle = 0))
+
+```
+
+```{r figOppPlanten, message= FALSE, warning= FALSE, fig.height=11, fig.width = 6.5, fig.cap = "Geobserveerde oppervlakteklassen vaatplantenmeetnetten"}
+observaties_alle %>%
+  filter(meetvariabele == "Oppervlakte") %>%
+  filter(FLORONcode %in% c("A","B","C","D","E","F","0")) %>%
+  ggplot(aes(x=FLORONcode, fill = type)) + 
+  geom_bar() +
+  labs(y = "Aantal tellingen") +
+  facet_grid(meetnet ~ jaar, scales = "free") + 
+  theme(legend.position= "bottom", strip.text = element_text(size=8), strip.text.y = element_text(angle = 0))
+
+```
+
+```{r kaart, message= FALSE, warning= FALSE, eval=FALSE}
+library(leaflet)
+library(htmltools)
+
+observaties_shape <- SpatialPointsDataFrame(cbind(observaties_alle$x, observaties_alle$y), data = observaties_alle)
+proj4string(observaties_shape) <- CRS("+init=epsg:31370")
+
+observaties_WGS_shape <- spTransform(observaties_shape, "+proj=longlat")
+
+soorten <- c("Polei", "Purperorchis")
+
+leaflet(soorten) %>% 
+  addTiles() %>% 
+  addMarkers(clusterOptions = markerClusterOptions(),
+             label = ~FLORONcode)
+
+
+leaflet() %>% 
+  addTiles() %>% 
+  addCircleMarkers(
+  data = observaties_WGS_shape[observaties_WGS_shape$meetnet == "Polei",],  
+  color = ~meetnet,
+  group = "Polei",
+  label = ~htmlEscape(as.character(FLORONcode)),
+  labelOptions = labelOptions(noHide = T),
+  clusterOptions = markerClusterOptions()) %>%
+  addCircleMarkers(
+  data = observaties_WGS_shape[observaties_WGS_shape$meetnet == "Purperorchis",],  
+  color = ~meetnet,
+  group = "Purperorchis",
+  label = ~htmlEscape(as.character(FLORONcode)),
+  labelOptions = labelOptions(noHide = T),
+  clusterOptions = markerClusterOptions()) %>%
+  addLayersControl(
+    overlayGroups = soorten,
+    options = layersControlOptions(collapsed = FALSE)
+  )
+
+```
+
+
+```{r tabelEvaluatie2017, message= FALSE, warning= FALSE, eval=FALSE}
+tabel_overige <- tabel_meetnetten2 %>%
+  filter(Jaar == 2017)
+
+overzicht_locaties_long <- overzicht_locaties_alle %>%
+  filter(!is.na(jaar) & nObsCP > 0) %>%
+  group_by(meetnet, ifbl_tag, type, jaar) %>%
+  summarise(nObsCP = sum(nObsCP),
+            traject = ifelse(sum(!is.na(traject)) > 0, 1 ,0),
+            nTest = n()) %>%
+  group_by(meetnet, ifbl_tag, type) %>%
+  mutate(nieuweLocatie2017 = ifelse((n() ==1) & (jaar[1] == 2017),1,0),
+          nieuwTraject2017 = ifelse((sum((jaar == 2016) * (traject)) == 0) &  (sum((jaar == 2017) * (traject)) == 1),1,0))
+
+overzicht_meetnetten_long <- overzicht_locaties_long %>%
+  group_by(meetnet, type) %>%
+  mutate(nLocatiesCyclus = n_distinct(ifbl_tag),
+         nLocatiesTracksCyclus = sum(nieuwTraject2017 * (jaar == 2017)) + sum(traject * (jaar == 2016))) %>%
+  group_by(meetnet, type, jaar, nLocatiesCyclus, nLocatiesTracksCyclus) %>%
+  summarise(nObsCP = sum(nObsCP),
+            nLocatiesTot = n(),
+            nLocatiesNieuw = sum(nieuweLocatie2017),
+            nLocatiesTracks = sum(traject),
+            nLocatiesTracksNieuw = sum(nieuwTraject2017 * (jaar == 2017)))
+  
+
+overzicht_totaal_long <- overzicht_locaties_long %>%
+  mutate(waterplant = ifelse(meetnet %in% waterplanten, "Ja", "Nee")) %>%
+  group_by( type, waterplant) %>%
+  mutate(nLocatiesCyclus = n_distinct(meetnet, ifbl_tag),
+         nLocatiesTracksCyclus = sum(nieuwTraject2017 * (jaar == 2017)) + sum(traject * (jaar == 2016))) %>%
+  group_by(type, waterplant, jaar, nLocatiesCyclus, nLocatiesTracksCyclus) %>%
+  summarise(nObsCP = sum(nObsCP),
+            nLocatiesTot = n(),
+            nLocatiesNieuw = sum(nieuweLocatie2017),
+            nLocatiesNieuwMetTrack = sum(nieuweLocatie2017 * traject),
+            nLocatiesTracks = sum(traject),
+            nLocatiesTracksNieuw = sum(nieuwTraject2017 * (jaar == 2017)))
+
+
+ temp <- overzicht_totaal_long %>%
+   ungroup()%>%
+   filter(type != "geschrapt") %>%
+   mutate(type = ifelse(type == "inMeetnet", "meetnetlocatie", "extraLocatie")) %>%
+   select(jaar, type, nLocatiesTot)  %>%
+   spread(key = type, value = nLocatiesTot)
+ 
+  temp2 <- overzicht_totaal_long %>%
+   ungroup()%>%
+   filter(type != "geschrapt") %>%
+   mutate(type = ifelse(type == "inMeetnet", "meetnetlocatieTrack", "extraLocatieTrack")) %>%
+   select(jaar, type, nLocatiesTracks)  %>%
+   spread(key = type, value = nLocatiesTracks)
+
+tabel_planten <- overzicht_totaal_long %>%
+  ungroup()%>%
+  filter(type == "inMeetnet") %>%
+  select(jaar, nObsCP, nLocatiesNieuw, nLocatiesCyclus, nLocatiesTracksCyclus, nLocatiesTracksNieuw) %>%
+  left_join(temp, by = "jaar") %>%
+  left_join(temp2, by = "jaar")
+
+tabel_planten$Soortgroep <- "Vaatplanten"
+tabel_planten$Jaardoel <- c(93, round(257/5, 0))
+tabel_planten$Eenheid <- c("Locaties", "Nieuwe locaties")
+tabel_planten$Protocol <- "Trajecttelling"
+
+tabel_planten <- tabel_planten %>%
+  select(Soortgroep, Protocol, Jaar = jaar, Jaardoel, Eenheid,
+         "Tellingen conform protocol" = nObsCP,
+         "Meetnetlocaties voldoende geteld - totaal" = meetnetlocatie,
+         "Meetnetlocaties voldoende geteld - nieuw" = nLocatiesNieuw,
+         "Meetnetlocaties voldoende geteld - cyclus" = nLocatiesCyclus,
+         "Meetnetlocaties met traject - totaal" = meetnetlocatieTrack,
+         "Meetnetlocaties met traject - nieuw" = nLocatiesTracksNieuw,
+         "Meetnetlocaties met traject - cyclus" = nLocatiesTracksCyclus,
+          "Extra locaties voldoende geteld" = extraLocatie,
+         "Extra locaties met traject" = extraLocatieTrack)
+  
+  
+tabel_stuurgroep <- bind_rows(rename(tabel_meetnetten3, Soortgroep = soortgroep), tabel_planten) %>%
+  group_by(Meetnet, Protocol) %>%
+  mutate("Jaar cyclus" = ifelse(Eenheid == "Nieuwe locaties", n(), NA)) %>%
+  filter(Jaar == 2017) %>%
+  arrange(Soortgroep, Meetnet) %>%
+  mutate("Doelbereik (%)" = ifelse(Eenheid == "Locaties", round(`Meetnetlocaties voldoende geteld - totaal`/ Jaardoel *100, 0),
+                             ifelse(Eenheid == "Nieuwe locaties", round(`Meetnetlocaties voldoende geteld - nieuw`/Jaardoel *100, 0),
+                             ifelse(Eenheid == "Bezoeken", round(`Tellingen conform protocol`/Jaardoel * 100, 0), NA))), 
+         "Doelbereik cyclus (%)" = ifelse(Eenheid == "Nieuwe locaties", round(`Meetnetlocaties voldoende geteld - cyclus`/(Jaardoel*5) * 100, 0), NA)) %>%
+  select(Soortgroep, Meetnet, Protocol, Jaar, "Jaar cyclus", Jaardoel, Eenheid, "Doelbereik (%)", "Doelbereik cyclus (%)", everything())
+
+write.csv2(tabel_stuurgroep, "../Output/Meetnetten_EvaluatieJaardoelen2017.csv", na = "", row.names = FALSE)
+```
+
+
+```{r dubbelsPlanten, message= FALSE, warning= FALSE}
+
+tellingen_dubbels <- data_planten %>%
+  filter(!is.na(Floron.code)) %>%
+  group_by(meetnet, jaar, ifbl_tag, datum) %>%
+  mutate(nDatum =n()) %>%
+  group_by(meetnet, jaar, ifbl_tag, datum, nDatum, aantal, Floron.code, Meetvariabele) %>%
+  summarise(nTelling = n(), 
+            proportieAantalIdentiek = n()/ nDatum[1],
+             #nVisit_id = n_distinct(visit_id),
+             nXY = n_distinct(x,y),
+             nOverlapXY = n() - n_distinct(x,y),
+             nFloron.code = n_distinct(Floron.code)) %>%
+  ungroup() %>%
+  mutate(hoogAantal = aantal > 900,
+         overlappendeLocaties = nOverlapXY > 0,
+         identiekeAantallen = proportieAantalIdentiek > 0.25 & aantal > 10 & nTelling > 1 & Meetvariabele == "Aantal" )%>%
+  filter(hoogAantal | overlappendeLocaties | identiekeAantallen) %>%
+  arrange(meetnet,  ifbl_tag )
+  
+overzicht_anomalie <- tellingen_dubbels %>%
+  select(-jaar, -nDatum, -nXY, -nFloron.code, -hoogAantal, -overlappendeLocaties, -identiekeAantallen)
+
+write.csv2(overzicht_anomalie, "../Output/planten_anomalieën_20190116.csv")
+
+
+```
