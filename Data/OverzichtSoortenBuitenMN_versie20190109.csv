@@ -1,0 +1,11 @@
+soortgroep;meetnet;protocol;Meetcyclus;Steekproeflocatie;jaar;Jaardoel;Eenheid;AantalTellingenCP;AantalTakenNU;AantalLocatiesNU;AantalVoldoendeGeteld;OppervlakteGeteld
+zoogdieren;Hamster;burchtentelling;1;1;2016;50;Hectare;4;0;0;1;82,8
+zoogdieren;Hamster;burchtentelling;1;1;2017;50;Hectare;5;0;0;1;73,4
+zoogdieren;Hamster;burchtentelling;1;1;2017;50;Hectare;3;0;0;1;69,9
+overige;Schavertje;Sprinkhanen - Wegvangst;1;1;2017;3;Locaties;4;0;0;4;
+overige;Schavertje;Sprinkhanen - Wegvangst;1;1;2018;3;Locaties;4;0;0;4;
+dagvlinders;Bruine eikenpage;Vlinders - Eitellingen;1;1;2017;3;Locaties;7;0;0;7;
+mollusken;Zeggekorfslak;inhaalslag;6;1;2017;10;Bezoeken;20;0;0;;
+mollusken;Platte schijfhoorn;inhaalslag;6;1;2017;10;Bezoeken;20;0;0;;
+mollusken;Bataafste stroommossel;inhaalslag;6;1;2017;10;Bezoeken;20;0;0;;
+mollusken;Nauwe korfslak;inhaalslag;6;1;2017;10;Bezoeken;20;0;0;;
