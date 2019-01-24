@@ -146,6 +146,7 @@ bezoeken %>%
 ```{r verkenningAantallenlibellen4, message=FALSE, warning= FALSE, fig.width= 5, fig.height= 5}
 
 aantallen_libellen_bezoek <- aantallen %>%
+  filter(bezoek_status == "Conform protocol") %>%
   group_by(meetnet, protocol,locatie, datum, jaar, taak, bezoek_status) %>%
   summarise(aantalTotaal = sum(aantal, na.rm =TRUE)) %>%
   ungroup()
