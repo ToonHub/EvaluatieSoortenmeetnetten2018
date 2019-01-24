@@ -167,7 +167,7 @@ bezoeken %>%
   filter(soortgroep == "amfibieën") %>% 
   filter(jaar == "2018") %>% 
   filter(bezoek_status != "Conform protocol") %>% 
-  select(meetnet, datum, locatie, "bezoek status" = bezoek_status, opmerkingen) %>%
+  select(meetnet, protocol, datum, locatie, "bezoek status" = bezoek_status, opmerkingen) %>%
   mutate(opmerkingen = gsub("\n", ". ", opmerkingen),
          opmerkingen = gsub("Â", "", opmerkingen)) %>%
   kable(booktabs = TRUE, escape = TRUE) %>%
@@ -182,6 +182,7 @@ bezoeken %>%
 
 aantallen_Amfibie_bezoek <- aantallen %>%
   filter(soortgroep == "amfibieën") %>%
+  filter(bezoek_status == "Conform protocol") %>%
   group_by(meetnet, protocol, levensstadium,  locatie, datum, jaar, taak, bezoek_status) %>%
   summarise(aantalTotaal = sum(aantal, na.rm =TRUE)) %>%
   ungroup() %>%
